@@ -1,12 +1,9 @@
-using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.IO;
-using System.Xml;
-using System.Xml.Serialization;
 using CommandLine;
 
 using MKVHelper.Serialization;
+using MKVHelper.Utilities;
 
 namespace MKVHelper {
     public class Program {
@@ -109,60 +106,20 @@ namespace MKVHelper {
         public static Chapters GetChapters(string inputFile) {
             string command = "mkvextract";
             string arguments = $"chapters \"{inputFile}\"";
-            string xml = GetProcessOutput(command, arguments);
-            return DeserializeXmlToChapters(xml);
-        }
-
-        public static Chapters DeserializeXmlToChapters(string xml) {
-            XmlSerializer serializer = new(typeof(Chapters));
-            using StringReader reader = new(xml);
-            object? deserialized = serializer.Deserialize(reader);
-            return (Chapters)(deserialized ?? throw new InvalidOperationException("Deserialization returned null."));
+            string xml = ProcessUtilities.GetProcessOutput(command, arguments);
+            return ChapterSerializer.DeserializeXmlToChapters(xml);
         }
 
         public static void SplitVideoFile(string inputFile, string startTimestamp, string endTimeStamp, Chapters chapters, string outputFile) {
             string chapterFile = Path.GetTempFileName();
-            string xml = SerializeChaptersToXml(chapters);
+            string xml = ChapterSerializer.SerializeChaptersToXml(chapters);
             File.WriteAllText(chapterFile, xml);
 
             string command = "mkvmerge";
             string arguments = $"--output \"{outputFile}\" --split parts:{startTimestamp}-{endTimeStamp} --chapters \"{chapterFile}\" --no-chapters \"{inputFile}\"";
-            RunProcess(command, arguments);
+            ProcessUtilities.RunProcess(command, arguments);
 
             File.Delete(chapterFile);
-        }
-
-        private static string SerializeChaptersToXml(Chapters chapters) {
-            XmlSerializer serializer = new(typeof(Chapters));
-            XmlSerializerNamespaces namespaces = new();
-            namespaces.Add(string.Empty, string.Empty); // To remove the xmlns:xsi and xmlns:xsd
-
-            using StringWriter stringWriter = new();
-            using XmlTextWriter xmlWriter = new(stringWriter) {
-                Formatting = Formatting.Indented
-            };
-            xmlWriter.WriteStartDocument();
-            xmlWriter.WriteDocType("Chapters", null, "matroskachapters.dtd", null);
-            serializer.Serialize(xmlWriter, chapters, namespaces);
-            return stringWriter.ToString();
-        }
-
-        public static string GetProcessOutput(string command, string arguments) {
-            Process process = RunProcess(command, arguments);
-            using StreamReader reader = process.StandardOutput;
-            return reader.ReadToEnd();
-        }
-
-        public static Process RunProcess(string command, string arguments) {
-            Console.WriteLine("Running command: " + command + " " + arguments);
-            using Process process = new();
-            process.StartInfo.FileName = command;
-            process.StartInfo.Arguments = arguments;
-            process.StartInfo.RedirectStandardOutput = true;
-            process.StartInfo.RedirectStandardError = true;
-            process.Start();
-            process.WaitForExit();
-            return process;
         }
     }
 }

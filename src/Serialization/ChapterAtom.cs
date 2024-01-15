@@ -1,5 +1,6 @@
-using System;
 using System.Xml.Serialization;
+
+using MKVHelper.Utilities;
 
 namespace MKVHelper.Serialization {
     public class ChapterAtom {
@@ -10,38 +11,25 @@ namespace MKVHelper.Serialization {
         [XmlElement("ChapterTimeStart")]
         public string ChapterTimeStart  {
             get => _chapterTimeStart;
-            set => _chapterTimeStart = TrimTrailingZeros(value);
+            set => _chapterTimeStart = TimeUtilities.TrimTrailingZeros(value);
         }
 
         private string _chapterTimeEnd;
         [XmlElement("ChapterTimeEnd")]
         public string ChapterTimeEnd {
             get => _chapterTimeEnd;
-            set => _chapterTimeEnd = TrimTrailingZeros(value);
+            set => _chapterTimeEnd = TimeUtilities.TrimTrailingZeros(value);
         }
 
         [XmlElement("ChapterDisplay")]
         public ChapterDisplay ChapterDisplay { get; set; }
 
         public double GetChapterTimeStartSeconds() {
-            return ConvertTimeStringToSeconds(ChapterTimeStart);
+            return TimeUtilities.ConvertToSeconds(ChapterTimeStart);
         }
 
         public double GetChapterTimeEndSeconds() {
-            return ConvertTimeStringToSeconds(ChapterTimeEnd);
-        }
-
-        private static double ConvertTimeStringToSeconds(string timeString) {
-            if (TimeSpan.TryParse(timeString, out TimeSpan timeSpan)) {
-                return timeSpan.TotalSeconds;
-            }
-            else {
-                throw new FormatException("Invalid time format");
-            }
-        }
-
-        private static string TrimTrailingZeros(string timeString) {
-            return timeString.TrimEnd('0').TrimEnd('.');
+            return TimeUtilities.ConvertToSeconds(ChapterTimeEnd);
         }
     }
 }
