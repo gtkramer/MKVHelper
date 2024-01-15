@@ -122,7 +122,8 @@ namespace MKVHelper {
 
         public static void SplitVideoFile(string inputFile, string startTimestamp, string endTimeStamp, Chapters chapters, string outputFile) {
             string chapterFile = Path.GetTempFileName();
-            SerializeChaptersToXml(chapters, chapterFile);
+            string xml = SerializeChaptersToXml(chapters);
+            File.WriteAllText(chapterFile, xml);
 
             string command = "mkvmerge";
             string arguments = $"--output \"{outputFile}\" --split parts:{startTimestamp}-{endTimeStamp} --chapters \"{chapterFile}\" --no-chapters \"{inputFile}\"";
@@ -131,17 +132,19 @@ namespace MKVHelper {
             File.Delete(chapterFile);
         }
 
-        private static void SerializeChaptersToXml(Chapters chapters, string filePath) {
+        private static string SerializeChaptersToXml(Chapters chapters) {
             XmlSerializer serializer = new(typeof(Chapters));
             XmlSerializerNamespaces namespaces = new();
             namespaces.Add(string.Empty, string.Empty); // To remove the xmlns:xsi and xmlns:xsd
 
-            using StreamWriter streamWriter = new(filePath);
-            using XmlTextWriter xmlWriter = new(streamWriter);
-            xmlWriter.Formatting = Formatting.Indented;
+            using StringWriter stringWriter = new();
+            using XmlTextWriter xmlWriter = new(stringWriter) {
+                Formatting = Formatting.Indented
+            };
             xmlWriter.WriteStartDocument();
             xmlWriter.WriteDocType("Chapters", null, "matroskachapters.dtd", null);
             serializer.Serialize(xmlWriter, chapters, namespaces);
+            return stringWriter.ToString();
         }
 
         public static string GetProcessOutput(string command, string arguments) {
