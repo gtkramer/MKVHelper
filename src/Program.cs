@@ -65,8 +65,8 @@ namespace MKVHelper {
                 chapterMainContent[chapterAtom.ChapterUID] = duration >= opts.EpisodeChapterThreshold;
             }
 
-            List<(int, int)> chapterRanges = [];
-            List<(string, string)> episodeTimestamps = [];
+            List<(int StartIndex, int EndIndex)> chapterRanges = [];
+            List<(string StartTimestamp, string EndTimestamp)> episodeTimestamps = [];
             int startIndex = 0;
             for (int i = 0, j = 1; i != chapterAtoms.Count; i++, j++) {
                 if (chapterMainContent[chapterAtoms[i].ChapterUID] && j < chapterAtoms.Count && !chapterMainContent[chapterAtoms[j].ChapterUID]) {
@@ -78,9 +78,9 @@ namespace MKVHelper {
             }
 
             List<Chapters> episodeChapters = [];
-            foreach ((int, int) chapterRange in chapterRanges) {
-                int count = chapterRange.Item2 - chapterRange.Item1 + 1;
-                List<ChapterAtom> adjustedChapterAtoms = chapterAtoms.GetRange(chapterRange.Item1, count);
+            foreach ((int StartIndex, int EndIndex) chapterRange in chapterRanges) {
+                int count = chapterRange.EndIndex - chapterRange.StartIndex + 1;
+                List<ChapterAtom> adjustedChapterAtoms = chapterAtoms.GetRange(chapterRange.StartIndex, count);
                 for (int i = 0; i != adjustedChapterAtoms.Count; i++) {
                     ChapterDisplay adjustedChapterDisplay = adjustedChapterAtoms[i].ChapterDisplay;
                     int chapterNum = i + 1;
@@ -97,7 +97,7 @@ namespace MKVHelper {
                 string fileName = opts.SeriesName + " - S" + opts.SeasonNum.ToString("D2") + "E" + episodeNum.ToString("D2") + ".mkv";
                 string outputFile = Path.Combine(Path.GetDirectoryName(opts.InputFile), fileName);
 
-                SplitVideoFile(opts.InputFile, episodeTimestamps[i].Item1, episodeTimestamps[i].Item2, episodeChapters[i], outputFile);
+                SplitVideoFile(opts.InputFile, episodeTimestamps[i].StartTimestamp, episodeTimestamps[i].EndTimestamp, episodeChapters[i], outputFile);
             }
 
             return 0;
