@@ -6,69 +6,9 @@ using System.Xml;
 using System.Xml.Serialization;
 using CommandLine;
 
+using MKVHelper.Serialization;
+
 namespace MKVHelper {
-    [XmlRoot("Chapters")]
-    public class Chapters {
-        [XmlElement("EditionEntry")]
-        public EditionEntry EditionEntry { get; set; }
-    }
-
-    public class EditionEntry {
-        [XmlElement("ChapterAtom")]
-        public List<ChapterAtom> ChapterAtoms { get; set; }
-    }
-
-    public class ChapterAtom {
-        [XmlElement("ChapterUID")]
-        public int ChapterUID { get; set; }
-
-        private string _chapterTimeStart;
-        [XmlElement("ChapterTimeStart")]
-        public string ChapterTimeStart  {
-            get => _chapterTimeStart;
-            set => _chapterTimeStart = TrimTrailingZeros(value);
-        }
-
-        private string _chapterTimeEnd;
-        [XmlElement("ChapterTimeEnd")]
-        public string ChapterTimeEnd {
-            get => _chapterTimeEnd;
-            set => _chapterTimeEnd = TrimTrailingZeros(value);
-        }
-
-        [XmlElement("ChapterDisplay")]
-        public ChapterDisplay ChapterDisplay { get; set; }
-
-        public double GetChapterTimeStartSeconds() {
-            return ConvertTimeStringToSeconds(ChapterTimeStart);
-        }
-
-        public double GetChapterTimeEndSeconds() {
-            return ConvertTimeStringToSeconds(ChapterTimeEnd);
-        }
-
-        private static double ConvertTimeStringToSeconds(string timeString) {
-            if (TimeSpan.TryParse(timeString, out TimeSpan timeSpan)) {
-                return timeSpan.TotalSeconds;
-            }
-            else {
-                throw new FormatException("Invalid time format");
-            }
-        }
-
-        private static string TrimTrailingZeros(string timeString) {
-            return timeString.TrimEnd('0').TrimEnd('.');
-        }
-    }
-
-    public class ChapterDisplay {
-        [XmlElement("ChapterString")]
-        public string ChapterString { get; set; }
-
-        [XmlElement("ChapterLanguage")]
-        public string ChapterLanguage { get; set; }
-    }
-
     public class Program {
         [Verb("split", HelpText = "Split a combined MKV file into multiple episodes")]
         private class SplitOptions {
@@ -215,7 +155,6 @@ namespace MKVHelper {
             using Process process = new();
             process.StartInfo.FileName = command;
             process.StartInfo.Arguments = arguments;
-            process.StartInfo.UseShellExecute = false;
             process.StartInfo.RedirectStandardOutput = true;
             process.StartInfo.RedirectStandardError = true;
             process.Start();
