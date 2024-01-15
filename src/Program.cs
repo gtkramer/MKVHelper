@@ -106,7 +106,7 @@ namespace MKVHelper {
         public static Chapters GetChapters(string inputFile) {
             string command = "mkvextract";
             string arguments = $"chapters \"{inputFile}\"";
-            string xml = ProcessUtilities.GetProcessOutput(command, arguments);
+            string xml = ProcessUtilities.RunProcess(command, arguments).StandardOutput;
             return ChapterSerializer.DeserializeXmlToChapters(xml);
         }
 
