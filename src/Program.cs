@@ -113,6 +113,7 @@ namespace MKVHelper {
         public static void SplitVideoFile(string inputFile, string startTimestamp, string endTimeStamp, Chapters chapters, string outputFile) {
             string chapterFile = Path.GetTempFileName();
             string xml = ChapterSerializer.SerializeChaptersToXml(chapters);
+            // This will write an actual UTF-8-encoded file to match the declaration in the XML header
             File.WriteAllText(chapterFile, xml);
 
             string command = "mkvmerge";

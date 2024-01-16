@@ -17,14 +17,20 @@ namespace MKVHelper.Serialization {
             XmlSerializerNamespaces namespaces = new();
             namespaces.Add(string.Empty, string.Empty); // To remove the xmlns:xsi and xmlns:xsd
 
-            using StringWriter stringWriter = new();
-            using XmlTextWriter xmlWriter = new(stringWriter) {
+            // Writing data to memory automatically produces a UTF-8 value for the encoding attribute in the generated XML header
+            using MemoryStream memoryStream = new();
+            using StreamWriter streamWriter = new(memoryStream);
+            using XmlTextWriter xmlWriter = new(streamWriter) {
                 Formatting = Formatting.Indented
             };
             xmlWriter.WriteStartDocument();
             xmlWriter.WriteDocType("Chapters", null, "matroskachapters.dtd", null);
             serializer.Serialize(xmlWriter, chapters, namespaces);
-            return stringWriter.ToString();
+
+            // Rewind the memory stream to read from the beginning
+            memoryStream.Position = 0;
+            using StreamReader reader = new(memoryStream);
+            return reader.ReadToEnd();
         }
     }
 }
